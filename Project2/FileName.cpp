@@ -1,7 +1,16 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
-
+class Game {
+public: 
+	SDL_Window* window;
+	SDL_Renderer* renderer;
+	bool running;
+	Game() {}
+	void render() {}
+	void run() {}
+	~Game() {}
+};
 int main(int argc, char** argv) {
 	SDL_Init(SDL_INIT_VIDEO);
 	IMG_Init(IMG_INIT_PNG);
