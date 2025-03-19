@@ -1,2 +1,3 @@
-﻿  FileName.cpp
-  Project2.vcxproj -> C:\Users\meobe\source\repos\Project2\x64\Debug\Project2.exe
+﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(531,5): warning MSB8028: The intermediate directory (x64\Debug\) contains files shared from another project (Project2.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  FileName.cpp
+  Project2.vcxproj -> C:\Users\meobe\source\repos\Project2\x64\Debug\BattleCity.exe
