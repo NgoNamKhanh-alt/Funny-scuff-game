@@ -3,34 +3,62 @@
 #include <SDL_ttf.h>
 #include <iostream>
 #include <vector>
-const int SCREEN_WIDTH = 1280;
+const int SCREEN_WIDTH = 1260;
 const int SCREEN_HEIGHT = 720;
 const int TILE_SIZE = 36;
 const int MAP_WIDTH = SCREEN_WIDTH / TILE_SIZE;
 const int MAP_HEIGHT = SCREEN_HEIGHT / TILE_SIZE;
 const int SHOT_DELAY = 250;
+const int ENEMY_SHOT_DELAY = 500;
 int last_shot_time = 0;
-class Wall {
+int last_enemy_shot_time = 0;
+class Enemy_Bullet {
+public:
+	int x, y;
+	int damage = 1;
+	int speed = 7;
+	int dirX, dirY;
+	SDL_Rect rect;
+	Enemy_Bullet(int startX, int startY) {
+		x = startX;
+		y = startY;
+		rect = { x, y, TILE_SIZE / 2, TILE_SIZE / 2 };
+		dirX = 0;
+		dirY = -1;
+	}
+	void move() {
+		int new_Y = y + speed;
+		y = new_Y;
+		rect.x = x;
+		rect.y = y;
+	}
+	void render(SDL_Renderer* renderer) {
+		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+		SDL_RenderFillRect(renderer, &rect);
+	}
+};
+class Enemy {
 public:
 	int x, y;
 	SDL_Rect rect;
-	bool active;
-	Wall(int startX, int startY) {
+	Enemy(int startX, int startY) {
 		x = startX;
 		y = startY;
-		rect = { x, y, TILE_SIZE, TILE_SIZE };
-		active = true;
+		rect = { x, y, TILE_SIZE * 3, TILE_SIZE * 3 };
+	}
+	void move(int x_speed) {
+		x = x + x_speed;
+		rect.x = x;
 	}
 	void render(SDL_Renderer* renderer) {
-		if (active) {
-			SDL_SetRenderDrawColor(renderer, 150, 75, 0, 255);
-			SDL_RenderFillRect(renderer, &rect);
-		}
+		SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+		SDL_RenderFillRect(renderer, &rect);
 	}
-};
+	};
 class Player_Bullet {
 public:
 	int x, y;
+	int damage = 1;
 	int speed = -9;
 	int dirX, dirY;
 	SDL_Rect rect;
@@ -46,7 +74,6 @@ public:
 			y = new_Y;
 			rect.x = x;
 			rect.y = y;
-		
 	}
 	void render(SDL_Renderer* renderer) {
 		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
@@ -85,15 +112,17 @@ public:
 	}
 
 };
+
 class Game {
 public: 
 	Player_Tank player;
-	std::vector<Wall> walls;
 	SDL_Window* window;
 	SDL_Renderer* renderer;
 	std::vector<Player_Bullet> bullets;
+	Enemy enemy; 
+	std::vector<Enemy_Bullet> enemy_bullets;
 	bool running;
-	Game() {
+	Game() : enemy(SCREEN_WIDTH / 2.2, SCREEN_HEIGHT / 6) {
 		running = true;
 		if (SDL_Init(SDL_INIT_VIDEO) < 0)
 		{
@@ -119,9 +148,28 @@ public:
 				bullets.erase(bullets.begin() + i);
 			}
 		}
+		int enemy_center = enemy.x + enemy.rect.w / 2;
+		int player_center = player.x + player.rect.w / 2;
+		if (enemy_center > player_center) {
+			enemy.move(-3);
+		}
+		else if (enemy_center < player_center) {
+			enemy.move(3);
+		}
+		Uint32 enemy_currentTime = SDL_GetTicks();
+		if (enemy_currentTime - last_enemy_shot_time >= ENEMY_SHOT_DELAY) {
+			enemy_bullets.push_back(Enemy_Bullet(enemy_center, enemy.y + TILE_SIZE * 3 + TILE_SIZE + 4));
+			last_enemy_shot_time = enemy_currentTime;
+		}
+		for (int i = 0; i < enemy_bullets.size(); ++i) {
+			enemy_bullets[i].move();
+			if (enemy_bullets[i].y > 720) {
+				enemy_bullets.erase(enemy_bullets.begin() + i);
+			}
+		}
 	}
 	void render() {
-		SDL_SetRenderDrawColor(renderer, 128,128,128,255);
+	
 		SDL_RenderClear(renderer);
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		for (int i = 0; i < MAP_HEIGHT; ++i) {
@@ -134,6 +182,10 @@ public:
 		for (int i = 0; i < bullets.size(); ++i) {
 			bullets[i].render(renderer);
 		}
+		for (int i = 0; i < enemy_bullets.size(); ++i) {
+			enemy_bullets[i].render(renderer);
+		}
+		enemy.render(renderer);
 		SDL_RenderPresent(renderer);
 	}
 	void run() {
