@@ -1,4 +1,6 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(531,5): warning MSB8028: The intermediate directory (x64\Debug\) contains files shared from another project (Project2.vcxproj).  This can lead to incorrect clean and rebuild behavior.
   FileName.cpp
-C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(125,30): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(39,9): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(40,9): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(137,30): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
   Project2.vcxproj -> C:\Users\meobe\source\repos\Project2\x64\Debug\BattleCity.exe
