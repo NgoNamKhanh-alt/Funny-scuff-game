@@ -13,14 +13,17 @@ const int MAP_HEIGHT = SCREEN_HEIGHT / TILE_SIZE;
 const int SHOT_DELAY = 250;
 const int ENEMY_SHOT_DELAY = 1500;
 const int ENEMY_SPEED_DELAY = 2500;
+const int FODDER_DELAY = 1000;
 int last_shot_time = 0;
 int last_enemy_shot_time = 0;
 int last_speed_change = 0;
+int fodder_spawn = 0;
 std::mt19937 mt{ static_cast<std::mt19937::result_type>(
 	std::chrono::steady_clock::now().time_since_epoch().count()
 	) };
 std::uniform_int_distribution<> speed_enemy{ -2, 2 };
-
+std::uniform_int_distribution<> fodder_plm{ -350, 350 };
+std::uniform_int_distribution<> fodder_dis{ -37, 37 };
 class Enemy_Bullet {
 public:
 	int x, y;
@@ -124,7 +127,47 @@ public:
 	}
 
 };
+class Fodders {
+public:
+	int x, y;
+	double dirX, dirY;
+	int damage = 1;
+	double speed = 6;
+	SDL_Rect rect;
+	int lastDirectionChange = SDL_GetTicks();
+    Fodders(int startX, int startY, int targetX) {
+        x = startX;
+        y = startY;
+        rect = { x, y, TILE_SIZE / 2, TILE_SIZE / 2 };
+		UpdateDirection(targetX);
+    }
+	void UpdateDirection(int targetX) {
+		double toX = targetX - x;
+		double toY = SCREEN_HEIGHT - y;
+		double length = sqrt(toX * toX + toY * toY);
+		dirX = (toX / length) * speed;
+		dirY = (toY / length) * speed;
+	}
 
+    void move(Player &player) {
+		Uint32 currentTime = SDL_GetTicks();
+		if (currentTime - lastDirectionChange >= 200) {
+			UpdateDirection(player.x);
+			lastDirectionChange = currentTime;
+		}
+        x += dirX;
+        y += dirY;
+		if (player.y < y) {
+			y += speed/5;
+		}
+        rect.x = x;
+        rect.y = y;
+    }
+	void render(SDL_Renderer* renderer) {
+		SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+		SDL_RenderFillRect(renderer, &rect);
+	}
+};
 class Game {
 public: 
 	Player player;
@@ -133,6 +176,7 @@ public:
 	std::vector<Player_Bullet> bullets;
 	Enemy enemy; 
 	std::vector<Enemy_Bullet> enemy_bullets;
+	std::vector<Fodders> fodders;
 	bool running;
 	Game() : enemy(SCREEN_WIDTH / 2.2, SCREEN_HEIGHT / 6) {
 		running = true;
@@ -141,7 +185,7 @@ public:
 			std::cerr << "SDL could not initialize! SDL Error:" << SDL_GetError() << "\n";
 			running = false;
 		}
-		window = SDL_CreateWindow("Battle City", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+		window = SDL_CreateWindow("Funny Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 		if (!window) {
 			std::cerr << "Window could not be created! SDL Error: " << SDL_GetError() << "\n";
 			running = false;
@@ -154,6 +198,19 @@ public:
 		player = Player((((MAP_WIDTH - 1) / 2) * TILE_SIZE), ((MAP_HEIGHT - 2) * TILE_SIZE));
 	}
 	void update() {
+		Uint32 currentTime = SDL_GetTicks();
+		if (currentTime - fodder_spawn >= FODDER_DELAY) {
+			fodders.push_back(Fodders(player.x + fodder_plm(mt), 0, player.x));
+			fodders.push_back(Fodders(player.x + fodder_plm(mt) + fodder_dis(mt), 0, player.x));
+			fodders.push_back(Fodders(player.x + fodder_plm(mt) - fodder_dis(mt), 0, player.x));
+			fodder_spawn = currentTime;
+		}
+		for (int i = 0; i < fodders.size(); ++i) {
+			fodders[i].move(player);
+			if (fodders[i].y > 720) {
+				fodders.erase(fodders.begin() + i);
+			}
+		}
 		for (int i = 0; i < bullets.size(); ++i) {
 			bullets[i].move();
 			if (bullets[i].y < 0) {
@@ -162,21 +219,20 @@ public:
 		}
 		int enemy_center = enemy.x + enemy.rect.w / 2;
 		int player_center = player.x + player.rect.w / 2;
-		Uint32 current_speed_change = SDL_GetTicks();
 		if (enemy.y < 20) {
 			enemy.y_speed = 2;
-			last_speed_change = current_speed_change;
+			last_speed_change = currentTime;
 		}
 		else if (enemy.y > 315) {
 			enemy.y_speed = -2;
-			last_speed_change = current_speed_change;
+			last_speed_change = currentTime;
 		}
-		else if (current_speed_change - last_speed_change >= ENEMY_SPEED_DELAY) {
+		else if (currentTime - last_speed_change >= ENEMY_SPEED_DELAY) {
 			enemy.y_speed = speed_enemy(mt);
 			if (enemy.y_speed == 0) {
 				enemy.y_speed = 1;
 			}
-			last_speed_change = current_speed_change;
+			last_speed_change = currentTime;
 		}
 		if (enemy_center > player_center) {
 			enemy.move(-3,enemy.y_speed);
@@ -198,7 +254,7 @@ public:
 		}
 		for (int i = 0; i < enemy_bullets.size(); ++i) {
 			enemy_bullets[i].move();
-			if (enemy_bullets[i].y > 720) {
+			if (enemy_bullets[i].y > 720 || enemy_bullets[i].y < 0) {
 				enemy_bullets.erase(enemy_bullets.begin() + i);
 			}
 		}
@@ -214,6 +270,9 @@ public:
 				SDL_RenderFillRect(renderer, &rect);
 			}
 		}
+		for (int i = 0; i < fodders.size(); ++i) {
+			fodders[i].render(renderer);
+		}
 		player.render(renderer);
 		for (int i = 0; i < bullets.size(); ++i) {
 			bullets[i].render(renderer);
@@ -223,6 +282,7 @@ public:
 		}
 		enemy.render(renderer);
 		SDL_RenderPresent(renderer);
+
 	}
 	void run() {
 		while (running) {
