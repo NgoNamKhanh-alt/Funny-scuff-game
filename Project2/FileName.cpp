@@ -58,7 +58,7 @@
 		Enemy(int startX, int startY) {
 			x = startX;
 			y = startY;
-			rect = { x, y, TILE_SIZE * 3, TILE_SIZE * 3 };
+			rect = { x, y, TILE_SIZE * 4, TILE_SIZE * 4 };
 		}
 		void move(int x_speed, int y_speed) {
 			x = x + x_speed;
@@ -81,7 +81,7 @@
 		Player_Bullet(int startX, int startY) {
 			x = startX;
 			y = startY;
-			rect = { x, y, TILE_SIZE / 3, TILE_SIZE / 3 };
+			rect = { x, y, TILE_SIZE / 4, TILE_SIZE / 3 };
 			dirX = 0;
 			dirY = -1;
 		}
@@ -91,9 +91,8 @@
 			rect.x = x;
 			rect.y = y;
 		}
-		void render(SDL_Renderer* renderer) {
-			SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-			SDL_RenderFillRect(renderer, &rect);
+		void render(SDL_Renderer* renderer,SDL_Texture* texture) {
+			SDL_RenderCopy(renderer, texture, NULL, &rect);
 		}
 	};
 	class Player {
@@ -102,11 +101,11 @@
 		int x, y;
 		int dirX, dirY;
 		SDL_Rect rect;
-		Player() : x(0), y(0), dirX(0), dirY(0) { rect = { x, y, TILE_SIZE, TILE_SIZE }; }
+		Player() : x(0), y(0), dirX(0), dirY(0) { rect = { x, y, TILE_SIZE* 2, TILE_SIZE /2 }; }
 		Player(int startX, int startY) {
 			x = startX;
 			y = startY;
-			rect = { x, y, TILE_SIZE, TILE_SIZE };
+			rect = { x, y, TILE_SIZE , TILE_SIZE * 3/2 };
 			dirX = 0;
 			dirY = -1;
 		}
@@ -123,9 +122,8 @@
 				rect.y = y;
 			}
 		}
-		void render(SDL_Renderer* renderer) {
-			SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
-			SDL_RenderFillRect(renderer, &rect);
+		void render(SDL_Renderer* renderer,SDL_Texture* texture) {
+			SDL_RenderCopy(renderer, texture, NULL, &rect);
 		}
 
 	};
@@ -141,7 +139,7 @@
 		Fodders(int startX, int startY, int targetX) {
 			x = startX;
 			y = startY;
-			rect = { x, y, TILE_SIZE / 2, TILE_SIZE / 2 };
+			rect = { x, y, TILE_SIZE , TILE_SIZE};
 			UpdateDirection(targetX);
 		}
 		void UpdateDirection(int targetX) {
@@ -166,9 +164,8 @@
 			rect.x = x;
 			rect.y = y;
 		}
-		void render(SDL_Renderer* renderer) {
-			SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-			SDL_RenderFillRect(renderer, &rect);
+		void render(SDL_Renderer* renderer, SDL_Texture* texture) {
+			SDL_RenderCopy(renderer, texture, NULL, &rect);
 		}
 	};
 	class Game {
@@ -192,6 +189,10 @@
 		std::vector<Fodders> fodders;
 		SDL_Texture* enemy_texture = NULL;
 		SDL_Texture* enemy_bullet_texture = NULL;
+		SDL_Texture* fodder_texture = NULL;
+		SDL_Texture* player_texture = NULL;
+		SDL_Texture* bullet_texture = NULL;
+		SDL_Texture* background_texture = NULL;
 		bool running;
 		Game() : enemy(SCREEN_WIDTH / 2.2, SCREEN_HEIGHT / 6) {
 			running = true;
@@ -212,6 +213,10 @@
 			}
 			enemy_texture = loadTexture("img/cirno_fumo.png");
 			enemy_bullet_texture = loadTexture("img/snowyflake.png");
+			fodder_texture = loadTexture("img/fairy.png");
+			player_texture = loadTexture("img/REI.png");
+			bullet_texture = loadTexture("img/bullet.png");
+			background_texture = loadTexture("img/background.png");
 			player = Player((((MAP_WIDTH - 1) / 2) * TILE_SIZE), ((MAP_HEIGHT - 2) * TILE_SIZE));
 		}
 
@@ -281,19 +286,13 @@
 		void render() {
 
 			SDL_RenderClear(renderer);
-			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-			for (int i = 0; i < MAP_HEIGHT; ++i) {
-				for (int j = 0; j < MAP_WIDTH; ++j) {
-					SDL_Rect rect = { j * TILE_SIZE, i * TILE_SIZE, TILE_SIZE, TILE_SIZE };
-					SDL_RenderFillRect(renderer, &rect);
-				}
-			}
+			SDL_RenderCopy(renderer, background_texture, NULL, NULL);
 			for (int i = 0; i < fodders.size(); ++i) {
-				fodders[i].render(renderer);
+				fodders[i].render(renderer,fodder_texture);
 			}
-			player.render(renderer);
+			player.render(renderer,player_texture);
 			for (int i = 0; i < bullets.size(); ++i) {
-				bullets[i].render(renderer);
+				bullets[i].render(renderer,bullet_texture);
 			}
 			for (int i = 0; i < enemy_bullets.size(); ++i) {
 				enemy_bullets[i].render(renderer,enemy_bullet_texture);
