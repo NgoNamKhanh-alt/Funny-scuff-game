@@ -1,14 +1,14 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(531,5): warning MSB8028: The intermediate directory (x64\Debug\) contains files shared from another project (Project2.vcxproj).  This can lead to incorrect clean and rebuild behavior.
   FileName.cpp
-C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(42,10): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
 C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(43,10): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(159,9): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
-C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(160,9): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
-C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(162,16): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
-C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(197,31): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(335,15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(341,15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(347,15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(348,16): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(359,15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(44,10): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(161,9): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
+C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(162,9): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
+C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(164,16): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
+C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(222,31): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(405,15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(413,15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(421,15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(422,16): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(435,15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   Project2.vcxproj -> C:\Users\meobe\source\repos\Project2\x64\Debug\BattleCity.exe
