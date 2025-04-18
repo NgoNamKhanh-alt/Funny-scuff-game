@@ -15,6 +15,10 @@
 	const int ENEMY_SHOT_DELAY = 1500;
 	const int ENEMY_SPEED_DELAY = 2500;
 	const int FODDER_DELAY = 1000;
+	const int DEAD_FRAME_DELAY = 65;
+	const int FRAME_COUNT_ENEMY = 6;
+	const int GHOST_NEEDED = 30;
+	int last_dead_frame = 0;
 	int last_shot_time = 0;
 	int last_enemy_shot_time = 0;
 	int last_speed_change = 0;
@@ -53,7 +57,7 @@
 	class Enemy {
 	public:
 		bool alive = true;
-		int health = 40;
+		int health = 30;
 		int x, y;
 		int y_speed = 1;
 		SDL_Rect rect;
@@ -69,8 +73,10 @@
 			rect.y = y;
 		}
 		void render(SDL_Renderer* renderer, SDL_Texture* texture) {
-			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-			SDL_RenderCopy(renderer, texture, NULL, &rect);
+			if (alive) {
+				SDL_RenderCopy(renderer, texture, NULL, &rect);
+			}
+		
 		}
 	};
 	class Player_Bullet {
@@ -199,6 +205,7 @@
 		Player player;
 		SDL_Window* window;
 		SDL_Renderer* renderer;
+		int ghost_count = 0;
 		Mix_Chunk* fumo_hit = NULL;
 		Mix_Chunk* player_hit = NULL;
 		Mix_Chunk* fodder_hit = NULL;
@@ -207,6 +214,8 @@
 		Enemy enemy;
 		std::vector<Enemy_Bullet> enemy_bullets;
 		std::vector<Fodders> fodders;
+		SDL_Rect dead_srcRect;
+		SDL_Rect dead_playerRect;
 		SDL_Texture* enemy_texture = NULL;
 		SDL_Texture* enemy_bullet_texture = NULL;
 		SDL_Texture* fodder_texture = NULL;
@@ -215,13 +224,21 @@
 		SDL_Texture* background_texture = NULL;
 		SDL_Texture* start_button = NULL;
 		SDL_Texture* quit_button = NULL;
+		SDL_Texture* fumo_boom = NULL;
+		SDL_Texture* player_die = NULL;
+		SDL_Texture* title = NULL;
+		SDL_Texture* lose = NULL;
+		SDL_Texture* win = NULL;
 		SDL_Rect start_rect = { SCREEN_WIDTH / 2 - (TILE_SIZE * 2 * 7 / 4) / 2, SCREEN_HEIGHT * 2 / 3,TILE_SIZE * 2 * 7 / 4, TILE_SIZE * 5 / 3 };
 		SDL_Rect quit_rect = { SCREEN_WIDTH / 2 - TILE_SIZE, SCREEN_HEIGHT * 2 / 3 + TILE_SIZE * 5 / 3 + TILE_SIZE / 2, TILE_SIZE * 2, TILE_SIZE * 4 / 3 };
+		SDL_Rect title_rect = { SCREEN_WIDTH / 2 - TILE_SIZE*5, SCREEN_HEIGHT /4 + TILE_SIZE*4, TILE_SIZE * 10, TILE_SIZE * 2 };
 		bool menu_running;
 		bool running;
+		bool game_over;
 		Game() : enemy(SCREEN_WIDTH / 2.2, SCREEN_HEIGHT / 6) {
 			menu_running = true;
 			running = false;
+			game_over = false;
 			if (SDL_Init(SDL_INIT_AUDIO) < 0) {
 				std::cerr << "SDL Init Error: " << SDL_GetError() << "\n";
 			}
@@ -243,6 +260,7 @@
 				std::cerr << "Renderer could not be created! SDL Error: " << SDL_GetError() << "\n";
 				running = false;
 			}
+			music = loadMusic("music/music.mp3");
 			player_hit = loadSound("sound/player_hit.wav");
 			fumo_hit = loadSound("sound/fumo_hit.wav");
 			fodder_hit = loadSound("sound/ghost_hit.wav");
@@ -254,11 +272,26 @@
 			background_texture = loadTexture("img/background.png");
 			start_button = loadTexture("img/start.png");
 			quit_button = loadTexture("img/quit.png");
+			fumo_boom = loadTexture("img/fumo_boom.png");
+			player_die = loadTexture("img/explosion.png");
+			title = loadTexture("img/title.png");
+			lose = loadTexture("img/lose.png");
+			win = loadTexture("img/win.png");
+			int w, h;
+			SDL_QueryTexture(player_die, nullptr, nullptr, &w, &h);
+			std::cout << w << " " << h;
+			dead_srcRect = { 0, 0, 210, 199 };
+			dead_playerRect = { 0,0,75,100 };
 			player = Player((((MAP_WIDTH - 1) / 2) * TILE_SIZE), ((MAP_HEIGHT - 2) * TILE_SIZE));
+			ghost_count = 0;
+
+			if (music != nullptr) {
+				Mix_PlayMusic(music, -1);
+				Mix_VolumeMusic(32);
+			}
 		}
 
 		void update() {
-			
 				Uint32 currentTime = SDL_GetTicks();
 				if (currentTime - fodder_spawn >= FODDER_DELAY) {
 					fodders.push_back(Fodders(player.x + fodder_plm(mt), 0, player.x));
@@ -280,6 +313,8 @@
 				}
 				int enemy_center = enemy.x + enemy.rect.w / 2;
 				int player_center = player.x + player.rect.w / 2;
+				if (ghost_count > GHOST_NEEDED)
+				{
 				if (enemy.y < 20) {
 					enemy.y_speed = 2;
 					last_speed_change = currentTime;
@@ -319,8 +354,9 @@
 						enemy_bullets.erase(enemy_bullets.begin() + i);
 					}
 				}
-			
-		}
+			}
+
+			}
 		void render() {
 			SDL_RenderClear(renderer);
 			SDL_RenderCopy(renderer, background_texture, NULL, NULL);
@@ -331,11 +367,13 @@
 			for (int i = 0; i < bullets.size(); ++i) {
 				bullets[i].render(renderer, bullet_texture);
 			}
-			for (int i = 0; i < enemy_bullets.size(); ++i) {
-				enemy_bullets[i].render(renderer, enemy_bullet_texture);
-			}
-			
+			if (ghost_count > GHOST_NEEDED) {
 				enemy.render(renderer, enemy_texture);
+				for (int i = 0; i < enemy_bullets.size(); ++i) {
+					enemy_bullets[i].render(renderer, enemy_bullet_texture);
+				}
+			}
+
 			
 			SDL_RenderPresent(renderer);
 
@@ -346,6 +384,7 @@
 			SDL_RenderCopy(renderer, background_texture, NULL, NULL);
 			SDL_RenderCopy(renderer, start_button, NULL, &start_rect);
 			SDL_RenderCopy(renderer, quit_button, NULL, &quit_rect);
+			SDL_RenderCopy(renderer, title, NULL, &title_rect);
 			SDL_RenderPresent(renderer);
 		}
 		void menu() {
@@ -364,18 +403,71 @@
 							running = false;
 						}
 					}
+					if (event.type == SDL_QUIT) {
+						running = false;
+						menu_running = false;
+					}
 				}
 			}
 		}
-		void run() {
-			while (menu_running) {
-				menu();
+		void gameover() {
+			SDL_Event event;
+			while (game_over) {
+				SDL_RenderClear(renderer);
+				SDL_RenderCopy(renderer, background_texture, NULL, NULL);
+				if (!enemy.alive) {
+					Uint32 currentTime = SDL_GetTicks();
+					if (currentTime - last_dead_frame >= DEAD_FRAME_DELAY) {
+						dead_srcRect.x += 210;
+						last_dead_frame = currentTime;
+					}
+					SDL_RenderCopy(renderer, win, NULL, &title_rect);
+					SDL_RenderCopy(renderer, fumo_boom, &dead_srcRect, &enemy.rect);
+				}
+				else if (player.health <= 0) {
+					Uint32 currentTime = SDL_GetTicks();
+					if (currentTime - last_dead_frame >= DEAD_FRAME_DELAY) {
+						dead_playerRect.x += 75;
+						last_dead_frame = currentTime;
+					}
+					SDL_Rect player_dead = { player.x - 75 / 2,player.y,75,100 };
+					SDL_RenderCopy(renderer, player_die, &dead_playerRect, &player_dead);
+					SDL_RenderCopy(renderer, lose, NULL, &title_rect);
+				}
+				SDL_RenderCopy(renderer, quit_button, NULL, &quit_rect);
+				while (SDL_PollEvent(&event)) {
+					if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+						SDL_Point mousePoint = { event.button.x, event.button.y };
+						if (SDL_PointInRect(&mousePoint, &quit_rect)) {
+							menu_running = false;
+							running = false;
+							game_over = false;
+						}
+					}
+					if (event.type == SDL_QUIT) {
+						running = false;
+						menu_running = false;
+						game_over = false;
+					}
+				}
+				SDL_RenderPresent(renderer);
 			}
-			while (running) {
-				handleEvents();
-				render();
-				update();
-				SDL_Delay(16);
+		}
+		void run() {
+			while (menu_running || running || game_over) {
+				if (menu_running) {
+					menu();
+				}
+				else if (running) {
+					handleEvents();
+					render();
+					update();
+					SDL_Delay(16);
+				}
+				else if (game_over) {
+					gameover();
+					SDL_Delay(16);
+				}
 			}
 		}
 		void handleEvents() {
@@ -410,14 +502,6 @@
 					fodders.erase(fodders.begin() + i);
 				}
 			}
-			for (int i = enemy_bullets.size() - 1; i >= 0; --i) {
-				if (SDL_HasIntersection(&player.rect, &enemy_bullets[i].rect)) {
-					player.health -= enemy_bullets[i].damage;
-					int channel = Mix_PlayChannel(-1, player_hit, 0);
-					Mix_Volume(channel, 64);
-					enemy_bullets.erase(enemy_bullets.begin() + i);
-				}
-			}
 			for (int i = bullets.size() - 1; i >= 0; --i) {
 				for (int j = fodders.size() - 1; j >= 0; --j) {
 					if (SDL_HasIntersection(&bullets[i].rect, &fodders[j].rect)) {
@@ -427,21 +511,36 @@
 							int channel = Mix_PlayChannel(-1, fodder_hit, 0);
 							Mix_Volume(channel, 9);
 							fodders.erase(fodders.begin() + j);
+							ghost_count += 1;
 						}
 						break;
 					}
 				}
 			}
-			for (int i = bullets.size() - 1; i >= 0; i--) {
-				if (SDL_HasIntersection(&bullets[i].rect, &enemy.rect)) {
-					enemy.health -= bullets[i].damage;
-					int channel = Mix_PlayChannel(-1, fumo_hit, 0);
-					Mix_Volume(channel, 15);
-					bullets.erase(bullets.begin() + i);
-					if (enemy.health <= 0) {
-						enemy.alive = false;
+			if (ghost_count > GHOST_NEEDED) {
+				for (int i = enemy_bullets.size() - 1; i >= 0; --i) {
+					if (SDL_HasIntersection(&player.rect, &enemy_bullets[i].rect)) {
+						player.health -= enemy_bullets[i].damage;
+						int channel = Mix_PlayChannel(-1, player_hit, 0);
+						Mix_Volume(channel, 64);
+						enemy_bullets.erase(enemy_bullets.begin() + i);
 					}
 				}
+				for (int i = bullets.size() - 1; i >= 0; i--) {
+					if (SDL_HasIntersection(&bullets[i].rect, &enemy.rect)) {
+						enemy.health -= bullets[i].damage;
+						int channel = Mix_PlayChannel(-1, fumo_hit, 0);
+						Mix_Volume(channel, 15);
+						bullets.erase(bullets.begin() + i);
+						if (enemy.health <= 0) {
+							enemy.alive = false;
+						}
+					}
+				}
+			}
+			if (!enemy.alive || player.health <= 0) {
+				game_over = true;
+				running = false;
 			}
 			while (SDL_PollEvent(&event)) {
 				if (event.type == SDL_QUIT) {
@@ -458,7 +557,7 @@
 
 	int main(int argc, char** argv) {
 		Game game;
-		if (game.running || game.menu_running) {
+		if (game.running || game.menu_running || game.game_over) {
 			game.run();
 			SDL_Delay(16);
 		}
