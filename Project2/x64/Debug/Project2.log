@@ -5,10 +5,11 @@ C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(48,10): warning C4244
 C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(167,9): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
 C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(168,9): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
 C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(170,16): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
-C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(238,31): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
-C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(497,15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(505,15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(506,16): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(521,16): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(529,16): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(241,31): warning C4244: 'argument': conversion from 'double' to 'int', possible loss of data
+C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(464,31): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(527,15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(535,15): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(536,16): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(551,16): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\meobe\source\repos\Project2\Project2\FileName.cpp(559,16): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   Project2.vcxproj -> C:\Users\meobe\source\repos\Project2\x64\Debug\BattleCity.exe

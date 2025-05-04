@@ -209,6 +209,8 @@
 		Mix_Chunk* fumo_hit = NULL;
 		Mix_Chunk* player_hit = NULL;
 		Mix_Chunk* fodder_hit = NULL;
+		Mix_Chunk* player_shoot = NULL;
+		Mix_Chunk* fumo_dies = NULL;
 		Mix_Music* music = NULL;
 		std::vector<Player_Bullet> bullets;
 		Enemy enemy;
@@ -229,6 +231,7 @@
 		SDL_Texture* title = NULL;
 		SDL_Texture* lose = NULL;
 		SDL_Texture* win = NULL;
+		SDL_Texture* try_again = NULL;
 		SDL_Rect start_rect = { SCREEN_WIDTH / 2 - (TILE_SIZE * 2 * 7 / 4) / 2, SCREEN_HEIGHT * 2 / 3,TILE_SIZE * 2 * 7 / 4, TILE_SIZE * 5 / 3 };
 		SDL_Rect quit_rect = { SCREEN_WIDTH / 2 - TILE_SIZE, SCREEN_HEIGHT * 2 / 3 + TILE_SIZE * 5 / 3 + TILE_SIZE / 2, TILE_SIZE * 2, TILE_SIZE * 4 / 3 };
 		SDL_Rect title_rect = { SCREEN_WIDTH / 2 - TILE_SIZE*5, SCREEN_HEIGHT /4 + TILE_SIZE*4, TILE_SIZE * 10, TILE_SIZE * 2 };
@@ -263,7 +266,9 @@
 			music = loadMusic("music/music.mp3");
 			player_hit = loadSound("sound/player_hit.wav");
 			fumo_hit = loadSound("sound/fumo_hit.wav");
+			player_shoot = loadSound("sound/player_shoot.mp3");
 			fodder_hit = loadSound("sound/ghost_hit.wav");
+			fumo_dies = loadSound("sound/fumo_dies.mp3");
 			enemy_texture = loadTexture("img/cirno_fumo.png");
 			enemy_bullet_texture = loadTexture("img/snowyflake.png");
 			fodder_texture = loadTexture("img/fairy.png");
@@ -276,13 +281,14 @@
 			player_die = loadTexture("img/explosion.png");
 			title = loadTexture("img/title.png");
 			lose = loadTexture("img/lose.png");
+			try_again = loadTexture("img/try_again.png");
 			win = loadTexture("img/win.png");
 			int w, h;
 			SDL_QueryTexture(player_die, nullptr, nullptr, &w, &h);
 			std::cout << w << " " << h;
-			dead_srcRect = { 0, 0, 210, 199 };
+			dead_srcRect = { 0, 0, 210, 199 }; 
 			dead_playerRect = { 0,0,75,100 };
-			player = Player((((MAP_WIDTH - 1) / 2) * TILE_SIZE), ((MAP_HEIGHT - 2) * TILE_SIZE));
+			player = Player((((MAP_WIDTH - 1) / 2) * TILE_SIZE), ((MAP_HEIGHT - 2) * TILE_SIZE)); 
 			ghost_count = 0;
 
 			if (music != nullptr) {
@@ -434,6 +440,7 @@
 					SDL_RenderCopy(renderer, player_die, &dead_playerRect, &player_dead);
 					SDL_RenderCopy(renderer, lose, NULL, &title_rect);
 				}
+				SDL_RenderCopy(renderer, try_again, NULL, &start_rect);
 				SDL_RenderCopy(renderer, quit_button, NULL, &quit_rect);
 				while (SDL_PollEvent(&event)) {
 					if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
@@ -442,6 +449,28 @@
 							menu_running = false;
 							running = false;
 							game_over = false;
+						}
+						else if (SDL_PointInRect(&mousePoint, &start_rect)) {
+							menu_running = false;
+							running = true;
+							game_over = false;
+							enemy.alive = true;
+							enemy_bullets.clear();
+							fodders.clear();
+							bullets.clear();
+							enemy.alive = true;
+							enemy.health = 30;
+							player.health = 3;
+							enemy.x = SCREEN_WIDTH / 2.2;
+							enemy.y = SCREEN_HEIGHT / 6;
+							enemy.rect = { enemy.x, enemy.y, TILE_SIZE * 4, TILE_SIZE * 4 };
+							player.x = ((MAP_WIDTH - 1) / 2) * TILE_SIZE;
+							player.y = (MAP_HEIGHT - 2) * TILE_SIZE;
+							player.rect = { player.x, player.y, TILE_SIZE, TILE_SIZE * 3 / 2 };
+							ghost_count = 0;
+							last_shot_time = SDL_GetTicks();
+							dead_playerRect.x = 0;
+							dead_srcRect.x = 0;
 						}
 					}
 					if (event.type == SDL_QUIT) {
@@ -489,7 +518,8 @@
 			Uint32 currentTime = SDL_GetTicks();
 			if (keystates[SDL_SCANCODE_SPACE]) {
 				if (currentTime - last_shot_time >= SHOT_DELAY) {
-
+					int channel = Mix_PlayChannel(-1, player_shoot, 0);
+					Mix_Volume(channel, 32);
 					bullets.push_back(Player_Bullet(player.x + TILE_SIZE / 3, player.y + TILE_SIZE / 3 - TILE_SIZE + 4));
 					last_shot_time = currentTime;
 				}
@@ -533,6 +563,8 @@
 						Mix_Volume(channel, 15);
 						bullets.erase(bullets.begin() + i);
 						if (enemy.health <= 0) {
+							int channel = Mix_PlayChannel(-1, fumo_dies, 0);
+							Mix_Volume(channel, 100);
 							enemy.alive = false;
 						}
 					}
